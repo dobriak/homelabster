@@ -6,40 +6,40 @@
       "name": "Proxmox",
       "url": "https://proxmox.local:8006",
       "description": "Virtualization management platform",
-      "icon": "",
+      "icon": "/api/images/1769797555558-c6c707f6e74a9c77.svg",
       "order": 0,
       "createdAt": "2026-01-30T00:00:00.000Z",
-      "updatedAt": "2026-01-30T00:00:00.000Z"
+      "updatedAt": "2026-01-30T18:26:01.731Z"
     },
     {
       "id": "2",
       "name": "Pi-hole",
       "url": "http://pihole.local/admin",
       "description": "Network-wide ad blocking",
-      "icon": "",
+      "icon": "/api/images/1769797722417-2932729651750bac.svg",
       "order": 1,
       "createdAt": "2026-01-30T00:00:00.000Z",
-      "updatedAt": "2026-01-30T00:00:00.000Z"
+      "updatedAt": "2026-01-30T18:28:46.823Z"
     },
     {
       "id": "3",
       "name": "Home Assistant",
       "url": "http://homeassistant.local:8123",
       "description": "Home automation platform",
-      "icon": "",
+      "icon": "/api/images/1769797840114-7dd4d526d28555e1.svg",
       "order": 2,
       "createdAt": "2026-01-30T00:00:00.000Z",
-      "updatedAt": "2026-01-30T00:00:00.000Z"
+      "updatedAt": "2026-01-30T18:30:43.465Z"
     },
     {
       "id": "4",
-      "name": "Portainer",
+      "name": "Dockge",
       "url": "https://portainer.local:9443",
       "description": "Docker container management",
-      "icon": "",
+      "icon": "/api/images/1769797883109-d6df4dcb591006bb.svg",
       "order": 3,
       "createdAt": "2026-01-30T00:00:00.000Z",
-      "updatedAt": "2026-01-30T00:00:00.000Z"
+      "updatedAt": "2026-01-30T18:31:25.562Z"
     }
   ],
   "settings": {
