@@ -12,7 +12,7 @@ export const tileSchema = z.object({
   url: z.string().url('Must be a valid URL'),
   description: z.string().max(500, 'Description must be less than 500 characters').optional(),
   icon: z.string().optional(),
-  order: z.number().int().min(0).default(0),
+  order: z.number().int().min(0),
 });
 
 export type TileFormData = z.infer<typeof tileSchema>;
@@ -21,7 +21,7 @@ export type TileFormData = z.infer<typeof tileSchema>;
  * Settings validation schema
  */
 export const settingsSchema = z.object({
-  theme: z.enum(['light', 'dark', 'system']).default('system'),
+  theme: z.enum(['light', 'dark', 'system']),
   siteName: z.string().min(1, 'Site name is required').max(100, 'Site name must be less than 100 characters'),
 });
 

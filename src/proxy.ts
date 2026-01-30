@@ -1,5 +1,5 @@
 /**
- * Middleware for route protection
+ * Proxy for route protection
  * Validates JWT token for /admin routes
  */
 
@@ -7,7 +7,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const token = request.cookies.get('auth-token')?.value;
 
   // Check if accessing admin route

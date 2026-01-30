@@ -30,7 +30,17 @@ export async function signToken(username: string): Promise<string> {
 export async function verifyToken(token: string): Promise<AuthTokenPayload | null> {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
-    return payload as AuthTokenPayload;
+
+    // Validate payload structure
+    if (
+      typeof payload.username === 'string' &&
+      typeof payload.iat === 'number' &&
+      typeof payload.exp === 'number'
+    ) {
+      return payload as unknown as AuthTokenPayload;
+    }
+
+    return null;
   } catch (error) {
     console.error('Token verification failed:', error);
     return null;

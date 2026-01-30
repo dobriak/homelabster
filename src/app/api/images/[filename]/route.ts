@@ -23,7 +23,7 @@ export async function GET(
     const buffer = await readImage(filename);
     const contentType = getImageContentType(filename);
 
-    return new NextResponse(buffer, {
+    return new NextResponse(new Uint8Array(buffer), {
       headers: {
         'Content-Type': contentType,
         'Cache-Control': 'public, max-age=31536000, immutable',
