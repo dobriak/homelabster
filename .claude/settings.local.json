@@ -8,7 +8,15 @@
       "Bash(bun add:*)",
       "Bash(openssl rand:*)",
       "Bash(bunx shadcn@latest add:*)",
-      "Bash(bun dev)"
+      "Bash(bun dev)",
+      "Bash(bun list:*)",
+      "Bash(git log:*)",
+      "Bash(bun run build)",
+      "Bash(tee:*)",
+      "Bash(curl:*)",
+      "Bash(kill:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nMigrate from middleware.ts to proxy.ts for Next.js 16\n\nPrimary change:\n- Rename middleware.ts → proxy.ts per Next.js 16 conventions\n- Update exported function name from middleware\\(\\) to proxy\\(\\)\n- No functional changes to JWT-based route protection\n\nAdditional TypeScript fixes to ensure build success:\n- Fix Buffer type in image API route \\(convert to Uint8Array\\)\n- Fix JWT payload type assertion in auth.ts \\(use unknown intermediate\\)\n- Remove .default\\(\\) from Zod schemas \\(theme and order fields\\)\n\nAll authentication flows verified:\n- Unauthenticated /admin access redirects to /login\n- Public routes load without authentication\n- No deprecation warnings in build or dev server\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }
