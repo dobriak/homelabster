@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  homelabster:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: homelabster
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - JWT_SECRET=${JWT_SECRET}
+    volumes:
+      # Mount userdata directory for persistent storage
+      - ./userdata:/app/userdata
+    networks:
+      - homelabster-network
+
+networks:
+  homelabster-network:
+    driver: bridge

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "WebSearch",
+      "WebFetch(domain:www.pronextjs.dev)",
+      "Bash(bun add:*)",
+      "Bash(openssl rand:*)",
+      "Bash(bunx shadcn@latest add:*)",
+      "Bash(bun dev)"
+    ]
+  }
+}

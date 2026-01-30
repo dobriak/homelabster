@@ -1,0 +1,51 @@
+{
+  "version": "1.0.0",
+  "tiles": [
+    {
+      "id": "1",
+      "name": "Proxmox",
+      "url": "https://proxmox.local:8006",
+      "description": "Virtualization management platform",
+      "icon": "",
+      "order": 0,
+      "createdAt": "2026-01-30T00:00:00.000Z",
+      "updatedAt": "2026-01-30T00:00:00.000Z"
+    },
+    {
+      "id": "2",
+      "name": "Pi-hole",
+      "url": "http://pihole.local/admin",
+      "description": "Network-wide ad blocking",
+      "icon": "",
+      "order": 1,
+      "createdAt": "2026-01-30T00:00:00.000Z",
+      "updatedAt": "2026-01-30T00:00:00.000Z"
+    },
+    {
+      "id": "3",
+      "name": "Home Assistant",
+      "url": "http://homeassistant.local:8123",
+      "description": "Home automation platform",
+      "icon": "",
+      "order": 2,
+      "createdAt": "2026-01-30T00:00:00.000Z",
+      "updatedAt": "2026-01-30T00:00:00.000Z"
+    },
+    {
+      "id": "4",
+      "name": "Portainer",
+      "url": "https://portainer.local:9443",
+      "description": "Docker container management",
+      "icon": "",
+      "order": 3,
+      "createdAt": "2026-01-30T00:00:00.000Z",
+      "updatedAt": "2026-01-30T00:00:00.000Z"
+    }
+  ],
+  "settings": {
+    "theme": "dark",
+    "siteName": "Homelabster",
+    "createdAt": "2026-01-30T00:00:00.000Z",
+    "updatedAt": "2026-01-30T17:15:42.793Z"
+  }
+}
