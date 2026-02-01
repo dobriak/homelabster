@@ -62,7 +62,90 @@ bun start
 
 # Run linter
 bun run lint
+
+# Run tests
+bun run test
+
+# Run tests in watch mode
+bun run test:watch
+
+# Run tests with coverage report
+bun run test:coverage
 ```
+
+## Testing
+
+The project uses Vitest as the testing framework with React Testing Library for component testing.
+
+### Test Structure
+
+Tests are located in the `__tests__/` directory:
+
+```
+src/
+├── __tests__/
+│   ├── setup.ts         # Test setup with global mocks
+│   └── lib/
+│       ├── utils.test.ts         # Tests for utility functions
+│       ├── validation.test.ts    # Tests for Zod schemas
+│       ├── auth.test.ts          # Tests for JWT authentication
+│       ├── storage.test.ts       # Tests for image storage (skipped)
+│       └── data.test.ts          # Tests for data layer (skipped)
+```
+
+### Running Tests
+
+```bash
+# Run all tests once
+bun run test
+
+# Run tests in watch mode (re-runs on file changes)
+bun run test:watch
+
+# Run tests with coverage report
+bun run test:coverage
+```
+
+### Test Configuration
+
+- **Test Framework**: Vitest 4.x with TypeScript support
+- **Test Environment**: happy-dom for React component testing
+- **Coverage Provider**: v8 for code coverage
+- **Configuration**: `vitest.config.ts`
+
+### Current Test Coverage
+
+- `lib/utils.ts`: 100% coverage
+- `lib/validation.ts`: 100% coverage
+- `lib/auth.ts`: 35.71% coverage (JWT operations and credential validation)
+
+### Writing Tests
+
+When adding new tests:
+1. Place test files in `__tests__/` alongside the code being tested
+2. Use `describe()` blocks for grouping related tests
+3. Use `it()` or `test()` for individual test cases
+4. Use `expect()` for assertions with Vitest matchers
+5. Mock external dependencies using `vi.mock()`
+
+Example test structure:
+```typescript
+import { describe, it, expect } from 'vitest';
+import { myFunction } from '@/lib/myfile';
+
+describe('myFunction', () => {
+  it('should do something', () => {
+    const result = myFunction('input');
+    expect(result).toBe('expected output');
+  });
+});
+```
+
+### Resources
+
+- [Vitest Documentation](https://vitest.dev/)
+- [React Testing Library](https://testing-library.com/react)
+- [Vitest Coverage Guide](https://vitest.dev/guide/coverage.html)
 
 ## Project Structure
 

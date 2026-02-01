@@ -66,6 +66,68 @@ bun start
 
 # Run linter (from src/ directory)
 bun run lint
+
+# Run tests (from src/ directory)
+bun run test
+
+# Run tests in watch mode (from src/ directory)
+bun run test:watch
+
+# Run tests with coverage report (from src/ directory)
+bun run test:coverage
+```
+
+## Testing
+
+The project uses Vitest as its testing framework with React Testing Library for component testing.
+
+### Test Configuration
+- **Test Framework**: Vitest 4.x with TypeScript support
+- **Test Environment**: happy-dom for React component testing
+- **Coverage Provider**: v8 for code coverage reporting
+- **Configuration File**: `src/vitest.config.ts`
+
+### Test Structure
+Tests are located in `src/__tests__/`:
+
+```
+src/
+├── __tests__/
+│   ├── setup.ts                # Test setup with environment variable mocks
+│   └── lib/
+│       ├── utils.test.ts       # Tests for utility functions (cn)
+│       ├── validation.test.ts  # Tests for Zod schemas
+│       ├── auth.test.ts        # Tests for JWT authentication
+│       ├── storage.test.ts     # Tests for image storage (skipped - complex fs mocking)
+│       └── data.test.ts        # Tests for data layer (skipped - complex fs mocking)
+```
+
+### Current Test Coverage
+- `lib/utils.ts`: 100% coverage (11 tests)
+- `lib/validation.ts`: 100% coverage (26 tests)
+- `lib/auth.ts`: 35.71% coverage (26 tests)
+- `lib/storage.ts`: 0% coverage (tests skipped due to complex fs mocking)
+- `lib/data.ts`: 0% coverage (tests skipped due to complex fs mocking)
+
+### Writing Tests
+When adding new tests:
+1. Place test files in `__tests__/` alongside the code being tested
+2. Use `describe()` blocks for grouping related tests
+3. Use `it()` or `test()` for individual test cases
+4. Use `expect()` for assertions with Vitest matchers
+5. Mock external dependencies using `vi.mock()`
+
+Example:
+```typescript
+import { describe, it, expect } from 'vitest';
+import { myFunction } from '@/lib/myfile';
+
+describe('myFunction', () => {
+  it('should do something', () => {
+    const result = myFunction('input');
+    expect(result).toBe('expected output');
+  });
+});
 ```
 
 ## Architecture Notes

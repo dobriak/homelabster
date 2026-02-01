@@ -40,6 +40,16 @@
       "order": 3,
       "createdAt": "2026-01-30T00:00:00.000Z",
       "updatedAt": "2026-01-30T18:31:25.562Z"
+    },
+    {
+      "name": "Django",
+      "url": "http://24.23.22.21:2000",
+      "description": "Django site",
+      "icon": "/api/images/1769922171139-61ab5d2ee568da06.svg",
+      "order": 4,
+      "id": "12f04a09-2655-444c-8665-483eba196414",
+      "createdAt": "2026-02-01T05:02:54.343Z",
+      "updatedAt": "2026-02-01T05:02:54.343Z"
     }
   ],
   "settings": {
