@@ -60,8 +60,9 @@ No database required - everything is stored in JSON format for simplicity and po
 2. Set up environment variables:
    ```bash
    # Copy .env file to src directory or project root
-   cp ../.env .env
+   cp env.sample .env
    ```
+   Provide the admin username and password in `.env`.
 
 3. Run development server:
    ```bash
@@ -69,10 +70,6 @@ No database required - everything is stored in JSON format for simplicity and po
    ```
 
 4. Open http://localhost:3000
-
-**Default credentials:**
-- Username: `admin`
-- Password: `admin` (change in `.env` file)
 
 ### Production Deployment
 
@@ -85,7 +82,7 @@ No database required - everything is stored in JSON format for simplicity and po
    JWT_SECRET=your_generated_secret
    ```
 
-   Generate a secure JWT secret:
+   Tip: generate a quality JWT secret:
    ```bash
    openssl rand -base64 32
    ```
