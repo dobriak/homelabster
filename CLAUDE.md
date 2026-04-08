@@ -18,7 +18,6 @@ Homelabster is a simple web application for organizing a directory of links to s
 - **Styling**: TailwindCSS 4+ with ShadCN UI components ("new-york" style)
 - **Language**: TypeScript 5+
 - **Runtime**: Bun (for package management and runtime)
-- **Build Tool**: Task-go for orchestration (https://taskfile.dev/docs/guide)
 - **Authentication**: JWT tokens via jose library
 - **Forms**: React Hook Form with Zod validation
 
@@ -42,7 +41,6 @@ homelabster/
 │   └── config/           # settings.json for configuration
 ├── Dockerfile            # Docker image build configuration
 ├── docker-compose.yml    # Docker deployment orchestration
-├── Taskfile.yml          # Task-go orchestration tasks
 └── README.md
 ```
 
@@ -199,4 +197,3 @@ The application is configured for Docker deployment:
 4. **Route Protection**: Next.js 16 uses `proxy.ts` (not `middleware.ts`) for route protection - see src/proxy.ts
 5. **Styling**: Use TailwindCSS 4+ with ShadCN UI components following the "new-york" style preset
 6. **TypeScript**: Strict mode is enabled (`strict: true` in tsconfig.json)
-7. **Task Orchestration**: Use Task-go (Taskfile.yml) for complex orchestration tasks

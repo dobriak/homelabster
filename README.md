@@ -38,7 +38,6 @@ Authentication credentials are configured via environment variables for security
 - **TailwindCSS 4+** with ShadCN UI components
 - **TypeScript 5+**
 - **Bun** runtime and package management
-- **Task-go** for orchestration
 
 ## Data Storage
 
