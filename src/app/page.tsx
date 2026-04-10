@@ -5,6 +5,7 @@
 import Link from 'next/link';
 import { getTiles, getSettings } from '@/lib/data';
 import { TileGrid } from '@/components/dashboard/tile-grid';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { Settings } from 'lucide-react';
 
 export default async function Home() {
@@ -14,7 +15,8 @@ export default async function Home() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        <nav className="mb-6 flex justify-end">
+        <nav className="mb-6 flex justify-end items-center gap-2">
+          <ThemeToggle />
           <Link
             href="/admin"
             className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
