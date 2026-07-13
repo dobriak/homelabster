@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Manage services · {{ settings.dashboard_title }}{% endblock %}
+{% block content %}
+<div class="mb-3"><h1 class="h2 mb-0">Manage services</h1><p class="text-body-secondary mb-0">Changes are stored in your local YAML file.</p></div>
+{% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+<div id="service-form-slot" class="mb-4"><button class="btn btn-primary" hx-get="/services/new" hx-target="#service-form-slot" hx-swap="innerHTML">Add service</button></div>
+<div class="table-responsive"><table class="table align-middle"><thead><tr><th>Service</th><th>Primary URL</th><th>Fallback</th><th></th></tr></thead><tbody id="service-rows">{% for service in services %}{% include "partials/service_row.html" %}{% endfor %}</tbody></table></div>
+{% endblock %}

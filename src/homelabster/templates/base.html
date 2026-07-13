@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en" data-bs-theme="{{ 'light' if settings.theme == 'system' else settings.theme }}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{{ settings.dashboard_title }}{% endblock %}</title>
+    {% if settings.theme == 'system' %}<script>const themeMedia = window.matchMedia('(prefers-color-scheme: dark)'); const setTheme = () => document.documentElement.dataset.bsTheme = themeMedia.matches ? 'dark' : 'light'; setTheme(); themeMedia.addEventListener('change', setTheme);</script>{% endif %}
+    <link rel="stylesheet" href="{{ url_for('static', path='bootstrap-5.3.8.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='app.css') }}">
+  </head>
+  <body class="bg-body-tertiary">
+    <nav class="navbar navbar-expand bg-dark navbar-dark mb-4"><div class="container"><a class="navbar-brand" href="/">{{ settings.dashboard_title }}</a><div class="navbar-nav ms-auto"><a class="nav-link" href="/admin">Settings</a><a class="nav-link" href="/services">Services</a></div></div></nav>
+    <main class="container pb-5">{% block content %}{% endblock %}</main>
+    <script src="{{ url_for('static', path='htmx-2.0.10.min.js') }}"></script>
+    <script src="{{ url_for('static', path='bootstrap-5.3.8.bundle.min.js') }}"></script>
+  </body>
+</html>

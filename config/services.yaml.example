@@ -1,0 +1,20 @@
+version: 1
+settings:
+  dashboard_title: Homelabster
+  theme: system
+  health_check_interval_seconds: 30
+services:
+  - id: proxmox
+    name: Proxmox
+    primary_url: https://proxmox.local
+    fallback_url: https://192.168.1.10:8006
+    health_url: https://192.168.1.10:8006
+    icon:
+      local_filename: default-service.svg
+  - id: home-assistant
+    name: Home Assistant
+    primary_url: https://homeassistant.local
+    fallback_url: http://192.168.1.20:8123
+    health_url: http://192.168.1.20:8123
+    icon:
+      local_filename: default-service.svg

@@ -216,3 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Homelabster runtime data
+/config/services.yaml
+/config/icons/
