@@ -3,6 +3,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from homelabster.main import create_app
+from homelabster.repository import CategoriesRepository
 
 
 def client(tmp_path: Path) -> TestClient:
@@ -101,3 +102,63 @@ def test_admin_rejects_invalid_settings(tmp_path: Path):
         )
         assert response.status_code == 422
         assert "Input should be" in response.text
+
+
+def test_categories_crud_assignments_and_dashboard_grouping(tmp_path: Path):
+    with client(tmp_path) as test_client:
+        admin = test_client.get("/admin")
+        assert admin.status_code == 200
+        assert "Service assignments" in admin.text
+        categories_path = tmp_path / "categories.yaml"
+        assert "name: All" in categories_path.read_text()
+
+        created = test_client.post("/admin/categories", data={"name": "Infrastructure", "icon": "fas fa-server"})
+        assert created.status_code == 200
+        assert created.headers["HX-Refresh"] == "true"
+        assert "name: Infrastructure" in categories_path.read_text()
+        assert "display_order: 1" in categories_path.read_text()
+
+        assert test_client.post("/admin/categories", data={"name": "Applications", "icon": "fas fa-cubes"}).status_code == 200
+        reordered = test_client.post(
+            "/admin/categories/order",
+            data={"category_name": ["Applications", "Infrastructure"], "display_order": ["1", "2"]},
+        )
+        assert reordered.status_code == 200
+        assert reordered.headers["HX-Refresh"] == "true"
+        category_repo = CategoriesRepository(categories_path)
+        assert category_repo.get("Applications").display_order == 1
+        assert category_repo.get("Infrastructure").display_order == 2
+
+        service = {
+            "name": "Grafana",
+            "service_id": "grafana",
+            "primary_url": "https://grafana.local",
+            "fallback_url": "http://10.0.0.8:3000",
+            "health_url": "",
+            "category": "Infrastructure",
+        }
+        assert test_client.post("/services", data=service).status_code == 200
+        assert "category: Infrastructure" in (tmp_path / "services.yaml").read_text()
+
+        grid = test_client.get("/partials/services")
+        assert "Infrastructure" in grid.text
+        assert "fas fa-server" in grid.text
+        assert "unassigned services" not in grid.text
+
+        service.update(name="Unassigned", service_id="unassigned", category="")
+        assert test_client.post("/services", data=service).status_code == 200
+        grid = test_client.get("/partials/services")
+        assert grid.text.index("All") < grid.text.index("Infrastructure")
+
+        saved = test_client.post(
+            "/admin/service-categories",
+            data={"service_id": ["grafana", "unassigned"], "category": ["", "Infrastructure"]},
+        )
+        assert saved.status_code == 200
+        assert saved.headers["HX-Refresh"] == "true"
+        assert "category: Infrastructure" in (tmp_path / "services.yaml").read_text()
+
+        deleted = test_client.delete("/admin/categories/Infrastructure")
+        assert deleted.status_code == 200
+        assert "category:" not in (tmp_path / "services.yaml").read_text()
+        assert "Infrastructure" not in categories_path.read_text()

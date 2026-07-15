@@ -219,4 +219,5 @@ __marimo__/
 
 # Homelabster runtime data
 /config/services.yaml
+/config/categories.yaml
 /config/icons/
