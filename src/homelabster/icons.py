@@ -62,6 +62,16 @@ class IconManager:
             value = value[0] if value else "svg"
         return value if value in {"svg", "png", "webp"} else "svg"
 
+    async def preview_url(self, name: str) -> str | None:
+        """Return the catalog URL for an icon without downloading it locally."""
+        match = await self.find(name)
+        if not match:
+            return None
+        slug, entry = match
+        variants = entry.get("colors", entry.get("variants", {}))
+        variant = variants.get("light") if isinstance(variants, dict) else None
+        return self.cdn_url.format(format=self._format(entry), slug=str(variant or slug))
+
     async def resolve(self, name: str) -> tuple[str, str] | None:
         match = await self.find(name)
         if not match:

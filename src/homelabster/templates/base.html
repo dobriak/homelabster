@@ -12,7 +12,22 @@
   <body class="bg-body-tertiary">
     <nav class="navbar navbar-expand bg-dark navbar-dark mb-4"><div class="container"><a class="navbar-brand" href="/">{{ settings.dashboard_title }}</a><div class="navbar-nav ms-auto"><a class="nav-link" href="/admin">Settings</a><a class="nav-link" href="/services">Services</a></div></div></nav>
     <main class="container pb-5">{% block content %}{% endblock %}</main>
+    <div class="toast-container position-fixed top-0 end-0 p-3"><div id="service-save-toast" class="toast align-items-center border-0" role="status" aria-live="polite" aria-atomic="true"><div class="d-flex"><div class="toast-body"></div><button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div></div>
     <script src="{{ url_for('static', path='htmx-2.0.10.min.js') }}"></script>
     <script src="{{ url_for('static', path='bootstrap-5.3.8.bundle.min.js') }}"></script>
+    <script>
+      document.body.addEventListener('service-save-status', (event) => {
+        const { message, variant, clear_form: clearForm } = event.detail;
+        const toast = document.getElementById('service-save-toast');
+        toast.className = `toast align-items-center border-0 text-bg-${variant}`;
+        toast.querySelector('.toast-body').textContent = message;
+        bootstrap.Toast.getOrCreateInstance(toast).show();
+        if (clearForm) {
+          const slot = document.getElementById('service-form-slot');
+          slot.innerHTML = '<button class="btn btn-primary" hx-get="/services/new" hx-target="#service-form-slot" hx-swap="innerHTML">Add service</button>';
+          htmx.process(slot);
+        }
+      });
+    </script>
   </body>
 </html>

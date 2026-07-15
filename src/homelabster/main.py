@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 from contextlib import asynccontextmanager, suppress
 from pathlib import Path
@@ -144,6 +145,17 @@ def create_app(config_path: Path | None = None) -> FastAPI:
             request, "partials/service_form.html", context(request, service=None, action="/services", categories=categories.list())
         )
 
+    @app.get("/services/icon-preview", response_class=HTMLResponse)
+    async def service_icon_preview(request: Request, name: str = "", icon_lookup_name: str = ""):
+        try:
+            lookup_name = icon_lookup_name.strip() or name.strip()
+            preview_url = await icons.preview_url(lookup_name) if lookup_name else None
+        except Exception:
+            preview_url = None
+        return templates.TemplateResponse(
+            request, "partials/service_icon_preview.html", context(request, service=None, preview_url=preview_url)
+        )
+
     @app.get("/services/{service_id}/edit", response_class=HTMLResponse)
     async def edit_service_form(request: Request, service_id: str):
         try:
@@ -163,17 +175,19 @@ def create_app(config_path: Path | None = None) -> FastAPI:
         fallback_url: str,
         health_url: str,
         category: str,
+        icon_lookup_name: str,
         upload: UploadFile | None,
         previous: Service | None = None,
     ) -> Service:
         service_id = service_id.strip() or service_id_from_name(name)
+        icon_name = icon_lookup_name.strip() or name.strip()
         current_icon = previous.icon if previous else Icon(local_filename="default-service.svg")
         try:
             if upload and upload.filename:
                 current_icon = Icon(local_filename=icons.save_upload(upload.filename, await upload.read()))
-            elif previous is None or name.strip() != previous.name:
+            elif previous is None or name.strip() != previous.name or icon_lookup_name.strip():
                 try:
-                    resolved = await icons.resolve(name)
+                    resolved = await icons.resolve(icon_name)
                 except Exception:
                     resolved = None
                 if resolved:
@@ -202,6 +216,16 @@ def create_app(config_path: Path | None = None) -> FastAPI:
         )
         response.headers["HX-Retarget"] = "#service-form-slot"
         response.headers["HX-Reswap"] = "innerHTML"
+        response.headers["HX-Trigger"] = json.dumps(
+            {"service-save-status": {"message": f"Service was not saved: {error}", "variant": "danger", "clear_form": False}}
+        )
+        return response
+
+    def saved_service_response(request: Request, service: Service) -> HTMLResponse:
+        response = templates.TemplateResponse(request, "partials/service_row.html", context(request, service=service))
+        response.headers["HX-Trigger"] = json.dumps(
+            {"service-save-status": {"message": f"{service.name} was saved.", "variant": "success", "clear_form": True}}
+        )
         return response
 
     @app.post("/services", response_class=HTMLResponse)
@@ -213,14 +237,15 @@ def create_app(config_path: Path | None = None) -> FastAPI:
         fallback_url: str = Form(...),
         health_url: str = Form(""),
         category: str = Form(""),
+        icon_lookup_name: str = Form(""),
         icon_upload: UploadFile | None = File(None),
     ):
         try:
-            service = await build_service(name, service_id, primary_url, fallback_url, health_url, category, icon_upload)
+            service = await build_service(name, service_id, primary_url, fallback_url, health_url, category, icon_lookup_name, icon_upload)
             repository.create(service)
         except (ValueError, ConfigurationError) as exc:
             return invalid_form(request, None, "/services", str(exc))
-        return templates.TemplateResponse(request, "partials/service_row.html", context(request, service=service))
+        return saved_service_response(request, service)
 
     @app.put("/services/{original_id}", response_class=HTMLResponse)
     async def update_service(
@@ -232,17 +257,18 @@ def create_app(config_path: Path | None = None) -> FastAPI:
         fallback_url: str = Form(...),
         health_url: str = Form(""),
         category: str = Form(""),
+        icon_lookup_name: str = Form(""),
         icon_upload: UploadFile | None = File(None),
     ):
         try:
             previous = repository.get(original_id)
-            service = await build_service(name, service_id, primary_url, fallback_url, health_url, category, icon_upload, previous)
+            service = await build_service(name, service_id, primary_url, fallback_url, health_url, category, icon_lookup_name, icon_upload, previous)
             repository.update(original_id, service)
         except KeyError:
             raise HTTPException(404, "Service not found")
         except (ValueError, ConfigurationError) as exc:
             return invalid_form(request, None, f"/services/{original_id}", str(exc))
-        return templates.TemplateResponse(request, "partials/service_row.html", context(request, service=service))
+        return saved_service_response(request, service)
 
     @app.delete("/services/{service_id}", response_class=HTMLResponse)
     async def delete_service(service_id: str):

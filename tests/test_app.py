@@ -92,6 +92,86 @@ def test_services_reports_inline_validation(tmp_path: Path):
         assert response.status_code == 422
         assert "must be an absolute http or https URL" in response.text
         assert response.headers["HX-Retarget"] == "#service-form-slot"
+        assert "Service was not saved" in response.headers["HX-Trigger"]
+
+
+def test_service_forms_preview_the_default_and_current_icons(tmp_path: Path):
+    with client(tmp_path) as test_client:
+        new_form = test_client.get("/services/new")
+        assert new_form.status_code == 200
+        assert 'id="service-icon-preview"' in new_form.text
+        assert "default-service.svg" in new_form.text
+
+        test_client.post(
+            "/services",
+            data={"name": "Grafana", "service_id": "grafana", "primary_url": "https://grafana.local", "fallback_url": "http://10.0.0.8:3000"},
+        )
+        edit_form = test_client.get("/services/grafana/edit")
+        assert edit_form.status_code == 200
+        assert "default-service.svg" in edit_form.text
+
+        (tmp_path / "services.yaml").write_text(
+            """version: 1
+services:
+  - id: custom
+    name: Custom
+    primary_url: https://custom.local
+    fallback_url: http://10.0.0.9:3000
+    icon:
+      local_filename: upload-custom.svg
+"""
+        )
+        custom_edit_form = test_client.get("/services/custom/edit")
+        assert "/icons/upload-custom.svg" in custom_edit_form.text
+
+
+def test_service_icon_preview_and_success_status(tmp_path: Path):
+    with client(tmp_path) as test_client:
+        test_client.app.state.icons._metadata = {"grafana": {"base": "svg"}}
+        preview = test_client.get("/services/icon-preview", params={"name": "Grafana"})
+        assert preview.status_code == 200
+        assert "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/grafana.svg" in preview.text
+
+        saved = test_client.post(
+            "/services",
+            data={"name": "Manual", "service_id": "manual", "primary_url": "https://manual.local", "fallback_url": "http://10.0.0.9:3000"},
+        )
+        assert "Manual was saved." in saved.headers["HX-Trigger"]
+        services = test_client.get("/services")
+        assert "service-save-toast" in services.text
+        assert "clearForm" in services.text
+
+
+def test_icon_lookup_name_overrides_the_service_name_for_icon_assignment(tmp_path: Path, monkeypatch):
+    resolved_names = []
+
+    async def resolve(name: str):
+        resolved_names.append(name)
+        return "proxmox", "proxmox.svg"
+
+    with client(tmp_path) as test_client:
+        monkeypatch.setattr(test_client.app.state.icons, "resolve", resolve)
+        payload = {
+            "name": "Arbitrary String",
+            "service_id": "arbitrary",
+            "primary_url": "https://arbitrary.local",
+            "fallback_url": "http://10.0.0.9:3000",
+            "icon_lookup_name": "Proxmox",
+        }
+        assert test_client.post("/services", data=payload).status_code == 200
+        assert resolved_names == ["Proxmox"]
+
+        payload["icon_lookup_name"] = "Grafana"
+        assert test_client.put("/services/arbitrary", data=payload).status_code == 200
+        assert resolved_names == ["Proxmox", "Grafana"]
+
+        payload.update({"name": "Custom", "service_id": "custom", "icon_lookup_name": "Proxmox"})
+        assert test_client.post(
+            "/services",
+            data=payload,
+            files={"icon_upload": ("custom.svg", b"<svg></svg>", "image/svg+xml")},
+        ).status_code == 200
+        assert resolved_names == ["Proxmox", "Grafana"]
 
 
 def test_admin_rejects_invalid_settings(tmp_path: Path):
