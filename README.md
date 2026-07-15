@@ -1,6 +1,14 @@
 # Homelabster
 
-A FastAPI dashboard for YAML-defined homelab services. It serves Bootstrap and htmx from local static files; Font Awesome Free is loaded for configurable category icons.
+A local-first FastAPI dashboard for YAML-defined homelab services. It groups service tiles into configurable categories, checks service health, and serves Bootstrap and htmx from local static files. Font Awesome Free is loaded for category icons.
+
+## Features
+
+- Create, edit, delete, and organize service tiles by category.
+- Configure category names, Font Awesome icons, and dashboard order. The fixed **All** category contains unassigned services.
+- Open each service through its FQDN or compact `ip` fallback link.
+- Optionally poll a health URL and display the current health state.
+- Preview a matching Dashboard Icons catalog icon while editing a service, or upload an SVG, PNG, or WEBP icon to override it.
 
 ## Setup and run
 
@@ -17,8 +25,9 @@ Open `http://127.0.0.1:8000`.
 
 ## Using the dashboard
 
-- Use **Settings** to set the dashboard title, UI theme, health-check interval, service categories, and category order. The fixed **All** category holds unassigned services.
-- Use **Services** to create, edit, delete, and categorize homelab services.
+- Use **Settings** to set the dashboard title, UI theme, health-check interval, categories, and category order.
+- Use **Services** to create, edit, delete, and categorize homelab services. A service can be left unassigned to appear in **All**.
+- When creating or editing a service, the icon preview uses the service name by default. Enter an optional **Icon lookup name**—for example, `Proxmox` for a tile named `Arbitrary String`—to use that catalog match instead. Uploading a custom icon always takes precedence.
 - Click a service name to open its FQDN; use its `ip` button for the IP:port fallback.
 
 ## Runtime data and backups
