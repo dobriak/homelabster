@@ -4,4 +4,5 @@
 <div class="mb-3"><h1 class="h2 mb-0">Application settings</h1><p class="text-body-secondary mb-0">Configure the dashboard experience.</p></div>
 {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
 <div id="settings-form">{% include "partials/settings_form.html" %}</div>
+<div id="categories-slot" class="mt-4">{% include "partials/categories.html" %}</div>
 {% endblock %}

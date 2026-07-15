@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from homelabster.models import AppSettings, Service
-from homelabster.repository import ConfigurationError, ServicesRepository
+from homelabster.models import ALL_CATEGORY, AppSettings, CategoriesDocument, Category, Service
+from homelabster.repository import CategoriesRepository, ConfigurationError, ServicesRepository
 
 
 def service(service_id: str = "grafana") -> Service:
@@ -48,3 +48,22 @@ def test_repository_rejects_malformed_and_duplicate_configuration(tmp_path: Path
 def test_repository_missing_config_is_clear(tmp_path: Path):
     with pytest.raises(ConfigurationError, match="missing"):
         ServicesRepository(tmp_path / "nope.yaml").load()
+
+
+def test_categories_are_separate_and_keep_all_category(tmp_path: Path):
+    path = tmp_path / "categories.yaml"
+    repo = CategoriesRepository(path)
+    repo.ensure_exists()
+    assert repo.list() == [ALL_CATEGORY]
+
+    repo.create(Category(name="Apps", icon="fas fa-cubes", display_order=99))
+    assert [category.name for category in repo.list()] == ["All", "Apps"]
+    assert repo.get("Apps").display_order == 1
+    assert "fa-solid fa-asterisk" in path.read_text()
+
+    with pytest.raises(ValueError, match="reserved"):
+        repo.create(Category(name="All", icon="fa-solid fa-asterisk", display_order=0))
+    with pytest.raises(ValueError, match="consecutive"):
+        CategoriesDocument.model_validate(
+            {"categories": [{"name": "All", "icon": "fa-solid fa-asterisk", "display_order": 0}, {"name": "Bad", "icon": "fas fa-x", "display_order": 2}]}
+        )

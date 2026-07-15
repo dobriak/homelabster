@@ -1,0 +1,8 @@
+version: 1
+categories:
+  - name: All
+    icon: fa-solid fa-asterisk
+    display_order: 0
+  - name: Infrastructure
+    icon: fas fa-server
+    display_order: 1
