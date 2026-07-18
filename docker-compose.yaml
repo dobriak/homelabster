@@ -1,0 +1,10 @@
+services:
+  homelabster:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      HOMELABSTER_DATA_DIR: /data
+    volumes:
+      - ./config:/data
+    restart: unless-stopped

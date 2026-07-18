@@ -23,6 +23,19 @@ uv run fastapi dev src/homelabster/main.py
 
 Open `http://127.0.0.1:8000`.
 
+## Docker
+
+Start the dashboard with Docker Compose:
+
+```sh
+docker compose up --build -d
+```
+
+Open `http://127.0.0.1:8000`. The first startup creates `config/services.yaml` and
+`config/categories.yaml` from their example files. The Compose file bind-mounts
+`./config` into the container, so configuration changes and uploaded icons persist
+on the host. Stop it with `docker compose down`.
+
 ## Using the dashboard
 
 - Use **Settings** to set the dashboard title, UI theme, health-check interval, categories, and category order.

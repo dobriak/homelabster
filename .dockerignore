@@ -1,0 +1,7 @@
+.git
+.venv
+__pycache__
+.pytest_cache
+config/services.yaml
+config/categories.yaml
+config/icons
