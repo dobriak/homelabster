@@ -2,5 +2,5 @@
 {% block title %}{{ settings.dashboard_title }}{% endblock %}
 {% block content %}
 {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
-<div id="service-grid" hx-get="/partials/services" hx-trigger="load, every {{ settings.health_check_interval_seconds }}s" hx-swap="innerHTML"><div class="text-body-secondary">Loading services…</div></div>
+<div id="service-grid" hx-get="/partials/services" hx-trigger="load, every {{ settings.health_check_interval_seconds }}s" hx-swap="innerHTML" hx-include="#service-search"><div class="text-body-secondary">Loading services…</div></div>
 {% endblock %}

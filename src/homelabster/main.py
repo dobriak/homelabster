@@ -69,7 +69,7 @@ def create_app(config_path: Path | None = None) -> FastAPI:
     def context(request: Request, **values: object) -> dict[str, object]:
         return {"request": request, "monitor": monitor, "settings": AppSettings(), **values}
 
-    def render_grid(request: Request) -> HTMLResponse:
+    def render_grid(request: Request, search: str = "") -> HTMLResponse:
         try:
             services = repository.list()
             category_list = categories.list()
@@ -77,8 +77,12 @@ def create_app(config_path: Path | None = None) -> FastAPI:
             unknown_categories = sorted({service.category for service in services if service.category and service.category not in category_names})
             if unknown_categories:
                 raise ConfigurationError(f"Services reference missing categories: {', '.join(unknown_categories)}")
+            search = search.strip()
+            if search:
+                normalized_search = search.casefold()
+                services = [service for service in services if normalized_search in service.name.casefold()]
             return templates.TemplateResponse(
-                request, "partials/service_grid.html", context(request, services=services, categories=category_list)
+                request, "partials/service_grid.html", context(request, services=services, categories=category_list, search=search)
             )
         except ConfigurationError as exc:
             return templates.TemplateResponse(request, "partials/config_error.html", context(request, error=str(exc)), status_code=500)
@@ -92,8 +96,8 @@ def create_app(config_path: Path | None = None) -> FastAPI:
             return templates.TemplateResponse(request, "dashboard.html", context(request, error=str(exc)), status_code=500)
 
     @app.get("/partials/services", response_class=HTMLResponse)
-    async def service_grid(request: Request):
-        return render_grid(request)
+    async def service_grid(request: Request, search: str = ""):
+        return render_grid(request, search)
 
     @app.get("/admin", response_class=HTMLResponse)
     async def admin(request: Request):

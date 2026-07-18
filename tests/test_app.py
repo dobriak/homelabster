@@ -19,8 +19,33 @@ def test_dashboard_and_htmx_grid(tmp_path: Path):
         response = test_client.get("/")
         assert response.status_code == 200
         assert 'hx-trigger="load, every 30s"' in response.text
+        assert 'id="service-search"' in response.text
+        assert 'hx-target="#service-grid"' in response.text
         response = test_client.get("/partials/services")
         assert "No services configured" in response.text
+
+
+def test_dashboard_search_filters_tiles_and_keeps_matching_categories(tmp_path: Path):
+    with client(tmp_path) as test_client:
+        assert test_client.post("/admin/categories", data={"name": "Infrastructure", "icon": "fas fa-server"}).status_code == 200
+        assert test_client.post("/admin/categories", data={"name": "Monitoring", "icon": "fas fa-chart-line"}).status_code == 200
+        for service in (
+            {"name": "Proxmox", "service_id": "proxmox", "primary_url": "https://proxmox.local", "fallback_url": "http://10.0.0.2", "category": "Infrastructure"},
+            {"name": "Proxifier", "service_id": "proxifier", "primary_url": "https://proxifier.local", "fallback_url": "http://10.0.0.3", "category": "Monitoring"},
+            {"name": "Grafana", "service_id": "grafana", "primary_url": "https://grafana.local", "fallback_url": "http://10.0.0.4", "category": "Monitoring"},
+        ):
+            assert test_client.post("/services", data=service).status_code == 200
+
+        filtered = test_client.get("/partials/services", params={"search": "PrOx"})
+        assert filtered.status_code == 200
+        assert "Proxmox" in filtered.text
+        assert "Proxifier" in filtered.text
+        assert "Grafana" not in filtered.text
+        assert filtered.text.count(">Infrastructure</h2>") == 1
+        assert filtered.text.count(">Monitoring</h2>") == 1
+
+        no_matches = test_client.get("/partials/services", params={"search": "missing"})
+        assert "No services match “missing”." in no_matches.text
 
 
 def test_admin_settings_update_dashboard(tmp_path: Path):

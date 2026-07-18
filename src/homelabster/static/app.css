@@ -1,4 +1,5 @@
 .service-icon { width: 48px; height: 48px; object-fit: contain; }
+.service-search { width: min(16rem, 38vw); }
 .card { border: 0; border-radius: 1rem; overflow: hidden; }
 .health-indicator { width: .65rem; height: .65rem; border-radius: 50%; flex: 0 0 auto; background: var(--bs-secondary); }
 .health-healthy { background: var(--bs-success); }
