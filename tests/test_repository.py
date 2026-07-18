@@ -26,11 +26,13 @@ def test_repository_persists_settings_and_defaults_old_config(tmp_path: Path):
     path.write_text("version: 1\nservices: []\n")
     repo = ServicesRepository(path)
     assert repo.load().settings.theme == "system"
+    assert repo.load().settings.health_checks_enabled is True
 
-    repo.update_settings(AppSettings(dashboard_title="Rack", theme="light", health_check_interval_seconds=60))
+    repo.update_settings(AppSettings(dashboard_title="Rack", theme="light", health_checks_enabled=False, health_check_interval_seconds=60))
     loaded = repo.load().settings
     assert loaded.dashboard_title == "Rack"
     assert loaded.theme == "light"
+    assert loaded.health_checks_enabled is False
     assert loaded.health_check_interval_seconds == 60
 
 

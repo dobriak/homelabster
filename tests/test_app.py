@@ -1,8 +1,14 @@
+import asyncio
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
+import pytest
 from fastapi.testclient import TestClient
 
+import homelabster.main as main
 from homelabster.main import create_app
+from homelabster.models import AppSettings, ServicesDocument
 from homelabster.repository import CategoriesRepository
 
 
@@ -54,7 +60,7 @@ def test_admin_settings_update_dashboard(tmp_path: Path):
         assert admin.status_code == 200
         assert '<a class="nav-link" href="/admin">Settings</a>' in admin.text
         assert '<a class="nav-link" href="/services">Services</a>' in admin.text
-        assert 'href="/">Homelabster</a>' in admin.text
+        assert '<span>Homelabster</span>' in admin.text
 
         saved = test_client.post(
             "/admin/settings",
@@ -65,6 +71,7 @@ def test_admin_settings_update_dashboard(tmp_path: Path):
         config = (tmp_path / "services.yaml").read_text()
         assert "dashboard_title: Command Center" in config
         assert "theme: dark" in config
+        assert "health_checks_enabled: true" in config
         assert "health_check_interval_seconds: 45" in config
 
         dashboard = test_client.get("/")
@@ -72,6 +79,60 @@ def test_admin_settings_update_dashboard(tmp_path: Path):
         assert 'data-bs-theme="dark"' in dashboard.text
         assert 'hx-trigger="load, every 45s"' in dashboard.text
         assert "Your homelab at a glance" not in dashboard.text
+
+
+def test_disabling_health_checks_hides_indicators_and_disables_the_interval(tmp_path: Path):
+    with client(tmp_path) as test_client:
+        test_client.post(
+            "/services",
+            data={
+                "name": "Grafana",
+                "service_id": "grafana",
+                "primary_url": "https://grafana.local",
+                "fallback_url": "http://10.0.0.8:3000",
+            },
+        )
+        saved = test_client.post(
+            "/admin/settings",
+            data={
+                "dashboard_title": "Homelabster",
+                "theme": "system",
+                "health_checks_enabled": "false",
+                "health_check_interval_seconds": "30",
+            },
+        )
+        assert saved.status_code == 200
+        assert "health_checks_enabled: false" in (tmp_path / "services.yaml").read_text()
+
+        admin = test_client.get("/admin")
+        assert 'for="health-checks-enabled">Health check</label>' in admin.text
+        assert 'id="health-interval"' in admin.text
+        assert 'id="health-interval" name="health_check_interval_seconds" type="number" min="5" max="3600" required value="30" disabled' in admin.text
+
+        dashboard = test_client.get("/")
+        assert 'hx-trigger="load"' in dashboard.text
+        grid = test_client.get("/partials/services")
+        assert "health-indicator" not in grid.text
+        assert "Health status:" not in grid.text
+
+
+@pytest.mark.asyncio
+async def test_poll_loop_skips_services_when_health_checks_are_disabled(monkeypatch):
+    monitor = SimpleNamespace(poll=AsyncMock())
+    app = SimpleNamespace(
+        state=SimpleNamespace(
+            repository=SimpleNamespace(load=lambda: ServicesDocument(settings=AppSettings(health_checks_enabled=False))),
+            monitor=monitor,
+        )
+    )
+
+    async def cancel_sleep(_: int) -> None:
+        raise asyncio.CancelledError
+
+    monkeypatch.setattr(main.asyncio, "sleep", cancel_sleep)
+    with pytest.raises(asyncio.CancelledError):
+        await main._poll_forever(app)
+    monitor.poll.assert_not_awaited()
 
 
 def test_services_crud_flow(tmp_path: Path):

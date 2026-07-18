@@ -49,6 +49,7 @@ class Service(BaseModel):
 class AppSettings(BaseModel):
     dashboard_title: str = Field(default="Homelabster", min_length=1, max_length=120)
     theme: Literal["system", "light", "dark"] = "system"
+    health_checks_enabled: bool = True
     health_check_interval_seconds: int = Field(default=30, ge=5, le=3600)
 
 

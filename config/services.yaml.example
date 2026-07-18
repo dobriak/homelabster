@@ -2,6 +2,7 @@ version: 1
 settings:
   dashboard_title: Homelabster
   theme: system
+  health_checks_enabled: true
   health_check_interval_seconds: 30
 services:
   - id: proxmox

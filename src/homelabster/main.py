@@ -32,8 +32,9 @@ async def _poll_forever(app: FastAPI) -> None:
     while True:
         try:
             document = app.state.repository.load()
-            await app.state.monitor.poll(document.services)
             interval = document.settings.health_check_interval_seconds
+            if document.settings.health_checks_enabled:
+                await app.state.monitor.poll(document.services)
         except ConfigurationError:
             interval = 30
         await asyncio.sleep(interval)
@@ -71,7 +72,8 @@ def create_app(config_path: Path | None = None) -> FastAPI:
 
     def render_grid(request: Request, search: str = "") -> HTMLResponse:
         try:
-            services = repository.list()
+            document = repository.load()
+            services = document.services
             category_list = categories.list()
             category_names = {category.name for category in category_list}
             unknown_categories = sorted({service.category for service in services if service.category and service.category not in category_names})
@@ -82,7 +84,9 @@ def create_app(config_path: Path | None = None) -> FastAPI:
                 normalized_search = search.casefold()
                 services = [service for service in services if normalized_search in service.name.casefold()]
             return templates.TemplateResponse(
-                request, "partials/service_grid.html", context(request, services=services, categories=category_list, search=search)
+                request,
+                "partials/service_grid.html",
+                context(request, settings=document.settings, services=services, categories=category_list, search=search),
             )
         except ConfigurationError as exc:
             return templates.TemplateResponse(request, "partials/config_error.html", context(request, error=str(exc)), status_code=500)
@@ -116,15 +120,19 @@ def create_app(config_path: Path | None = None) -> FastAPI:
         request: Request,
         dashboard_title: str = Form(""),
         theme: str = Form("system"),
+        health_checks_enabled: bool = Form(True),
         health_check_interval_seconds: str = Form("30"),
     ):
         try:
             settings = AppSettings(
                 dashboard_title=dashboard_title.strip(),
                 theme=theme,
+                health_checks_enabled=health_checks_enabled,
                 health_check_interval_seconds=health_check_interval_seconds,
             )
             repository.update_settings(settings)
+            if not settings.health_checks_enabled:
+                monitor.statuses.clear()
         except (ValidationError, ValueError, ConfigurationError) as exc:
             return templates.TemplateResponse(
                 request, "partials/settings_form.html", context(request, error=str(exc)), status_code=422
