@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}IPAM · {{ settings.dashboard_title }}{% endblock %}
+{% block content %}
+<div class="mb-3"><h1 class="h2 mb-0">IP Address Management</h1><p class="text-body-secondary mb-0">Manage CIDR ranges, hosts, and ports.</p></div>
+{% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+<div id="ipam-network-form-slot" class="mb-4">
+  <button class="btn btn-primary" hx-get="/ipam/networks/new" hx-target="#ipam-network-form-slot" hx-swap="innerHTML">Add CIDR</button>
+</div>
+<div id="ipam-network-list">{% include "partials/ipam_network_list.html" %}</div>
+{% endblock %}

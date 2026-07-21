@@ -14,8 +14,8 @@ from pydantic import ValidationError
 
 from .health import HealthMonitor
 from .icons import IconManager
-from .models import AppSettings, Category, Icon, Service, service_id_from_name
-from .repository import CategoriesRepository, ConfigurationError, ServicesRepository
+from .models import AppSettings, Category, Icon, IpamDocument, IpamHost, IpamNetwork, IpamPort, Service, service_id_from_name
+from .repository import CategoriesRepository, ConfigurationError, IpamRepository, ServicesRepository
 
 PACKAGE_DIR = Path(__file__).parent
 PROJECT_DIR = PACKAGE_DIR.parents[1]
@@ -45,6 +45,8 @@ def create_app(config_path: Path | None = None) -> FastAPI:
     categories = CategoriesRepository(repository.config_path.parent / "categories.yaml")
     categories.ensure_exists()
     repository.icons_dir.mkdir(parents=True, exist_ok=True)
+    ipam = IpamRepository(repository.config_path.parent / "ipam.yaml")
+    ipam.ensure_exists()
     monitor = HealthMonitor()
     icons = IconManager(repository.icons_dir)
     templates = Jinja2Templates(directory=str(PACKAGE_DIR / "templates"))
@@ -62,6 +64,7 @@ def create_app(config_path: Path | None = None) -> FastAPI:
     app = FastAPI(title="Homelabster", lifespan=lifespan)
     app.state.repository = repository
     app.state.categories = categories
+    app.state.ipam = ipam
     app.state.monitor = monitor
     app.state.icons = icons
     app.mount("/static", StaticFiles(directory=PACKAGE_DIR / "static"), name="static")
@@ -390,6 +393,262 @@ def create_app(config_path: Path | None = None) -> FastAPI:
         response = HTMLResponse("")
         response.headers["HX-Refresh"] = "true"
         return response
+
+    # ------------------------------------------------------------------
+    # IPAM routes
+    # ------------------------------------------------------------------
+
+    @app.get("/ipam", response_class=HTMLResponse)
+    async def ipam_page(request: Request):
+        try:
+            settings = repository.load().settings
+            networks = ipam.list_networks()
+            return templates.TemplateResponse(
+                request, "ipam.html", context(request, settings=settings, networks=networks)
+            )
+        except ConfigurationError as exc:
+            return templates.TemplateResponse(
+                request, "ipam.html", context(request, settings=AppSettings(), networks=[], error=str(exc))
+            )
+
+    @app.get("/ipam/networks/cancel", response_class=HTMLResponse)
+    async def ipam_network_cancel(request: Request):
+        return HTMLResponse(
+            '<button class="btn btn-primary" hx-get="/ipam/networks/new" hx-target="#ipam-network-form-slot" hx-swap="innerHTML">Add CIDR</button>'
+        )
+
+    @app.get("/ipam/networks/new", response_class=HTMLResponse)
+    async def ipam_network_new_form(request: Request):
+        return templates.TemplateResponse(
+            request, "partials/ipam_network_form.html", context(request, network=None)
+        )
+
+    @app.get("/ipam/networks/{cidr:path}/edit", response_class=HTMLResponse)
+    async def ipam_network_edit_form(request: Request, cidr: str):
+        try:
+            network = ipam.get_network(cidr)
+        except KeyError:
+            raise HTTPException(404, "CIDR not found")
+        return templates.TemplateResponse(
+            request, "partials/ipam_network_form.html", context(request, network=network)
+        )
+
+    def _render_network_list(request: Request) -> HTMLResponse:
+        networks = ipam.list_networks()
+        return templates.TemplateResponse(
+            request, "partials/ipam_network_list.html", context(request, networks=networks)
+        )
+
+    @app.post("/ipam/networks", response_class=HTMLResponse)
+    async def ipam_create_network(request: Request, cidr: str = Form(...)):
+        try:
+            network = IpamNetwork(cidr=cidr.strip())
+            ipam.create_network(network)
+        except (ValidationError, ValueError) as exc:
+            response = templates.TemplateResponse(
+                request,
+                "partials/ipam_network_form.html",
+                context(request, network=None, error=str(exc)),
+                status_code=422,
+            )
+            response.headers["HX-Retarget"] = "#ipam-network-form-slot"
+            return response
+        return _render_network_list(request)
+
+    def _render_full_accordion_body(request: Request, cidr: str) -> HTMLResponse:
+        try:
+            network = ipam.get_network(cidr)
+        except KeyError:
+            raise HTTPException(404, "CIDR not found")
+        return templates.TemplateResponse(
+            request,
+            "partials/ipam_network_body.html",
+            context(request, network=network, net_index=0),
+        )
+
+    @app.get("/ipam/networks/{cidr:path}/hosts/new", response_class=HTMLResponse)
+    async def ipam_host_new_form(request: Request, cidr: str, net_index: int = 0):
+        try:
+            network = ipam.get_network(cidr)
+        except KeyError:
+            raise HTTPException(404, "CIDR not found")
+        return templates.TemplateResponse(
+            request,
+            "partials/ipam_host_form.html",
+            context(request, network=network, host=None, net_index=net_index),
+        )
+
+    @app.get("/ipam/networks/{cidr:path}/hosts/{ip}/edit", response_class=HTMLResponse)
+    async def ipam_host_edit_form(request: Request, cidr: str, ip: str, net_index: int = 0):
+        try:
+            network = ipam.get_network(cidr)
+            host = ipam.get_host(cidr, ip)
+        except KeyError:
+            raise HTTPException(404, "Host not found")
+        return templates.TemplateResponse(
+            request,
+            "partials/ipam_host_form.html",
+            context(request, network=network, host=host, net_index=net_index),
+        )
+
+    @app.post("/ipam/networks/{cidr:path}/hosts", response_class=HTMLResponse)
+    async def ipam_create_host(request: Request, cidr: str, hostname: str = Form(...), ip: str = Form(...), net_index: int = Form(0)):
+        try:
+            host = IpamHost(hostname=hostname.strip(), ip=ip.strip())
+            ipam.create_host(cidr, host)
+        except KeyError:
+            raise HTTPException(404, "CIDR not found")
+        except (ValidationError, ValueError) as exc:
+            try:
+                network = ipam.get_network(cidr)
+            except KeyError:
+                raise HTTPException(404, "CIDR not found")
+            response = templates.TemplateResponse(
+                request,
+                "partials/ipam_host_form.html",
+                context(request, network=network, host=IpamHost(hostname=hostname.strip(), ip=ip.strip()), net_index=net_index, error=str(exc)),
+                status_code=422,
+            )
+            return response
+        return _render_full_accordion_body(request, cidr, net_index)
+
+    @app.put("/ipam/networks/{cidr:path}/hosts/{original_ip}", response_class=HTMLResponse)
+    async def ipam_update_host(request: Request, cidr: str, original_ip: str, hostname: str = Form(...), ip: str = Form(...), net_index: int = Form(0)):
+        try:
+            host = IpamHost(hostname=hostname.strip(), ip=ip.strip())
+            ipam.update_host(cidr, original_ip, host)
+        except KeyError:
+            raise HTTPException(404, "Host not found")
+        except (ValidationError, ValueError) as exc:
+            try:
+                network = ipam.get_network(cidr)
+            except KeyError:
+                raise HTTPException(404, "CIDR not found")
+            response = templates.TemplateResponse(
+                request,
+                "partials/ipam_host_form.html",
+                context(request, network=network, host=IpamHost(hostname=hostname.strip(), ip=ip.strip()), net_index=net_index, error=str(exc)),
+                status_code=422,
+            )
+            return response
+        return _render_full_accordion_body(request, cidr, net_index)
+
+    @app.delete("/ipam/networks/{cidr:path}/hosts/{ip}", response_class=HTMLResponse)
+    async def ipam_delete_host(request: Request, cidr: str, ip: str, net_index: int = 0):
+        try:
+            ipam.delete_host(cidr, ip)
+        except KeyError:
+            raise HTTPException(404, "Host not found")
+        return _render_full_accordion_body(request, cidr, net_index)
+
+    @app.get("/ipam/networks/{cidr:path}/hosts/{host_ip}/ports/new", response_class=HTMLResponse)
+    async def ipam_port_new_form(request: Request, cidr: str, host_ip: str, net_index: int = 0):
+        try:
+            network = ipam.get_network(cidr)
+        except KeyError:
+            raise HTTPException(404, "CIDR not found")
+        return templates.TemplateResponse(
+            request,
+            "partials/ipam_port_form.html",
+            context(request, network=network, host_ip=host_ip, port=None, net_index=net_index),
+        )
+
+    @app.post("/ipam/networks/{cidr:path}/hosts/{host_ip}/ports", response_class=HTMLResponse)
+    async def ipam_create_port(request: Request, cidr: str, host_ip: str, name: str = Form(...), port: int = Form(...), net_index: int = Form(0)):
+        try:
+            p = IpamPort(name=name.strip(), port=port)
+            ipam.create_port(cidr, host_ip, p)
+        except KeyError:
+            raise HTTPException(404, "CIDR or host not found")
+        except (ValidationError, ValueError) as exc:
+            try:
+                network = ipam.get_network(cidr)
+            except KeyError:
+                raise HTTPException(404, "CIDR not found")
+            response = templates.TemplateResponse(
+                request,
+                "partials/ipam_port_form.html",
+                context(request, network=network, host_ip=host_ip, port=None, net_index=net_index, error=str(exc)),
+                status_code=422,
+            )
+            return response
+        return _render_full_accordion_body(request, cidr, net_index)
+
+    @app.put("/ipam/networks/{cidr:path}/hosts/{host_ip}/ports/{original_port:int}", response_class=HTMLResponse)
+    async def ipam_update_port(
+        request: Request, cidr: str, host_ip: str, original_port: int,
+        name: str = Form(...), port: int = Form(...), net_index: int = Form(0)
+    ):
+        try:
+            p = IpamPort(name=name.strip(), port=port)
+            ipam.update_port(cidr, host_ip, original_port, p)
+        except KeyError:
+            raise HTTPException(404, "Port not found")
+        except (ValidationError, ValueError) as exc:
+            try:
+                network = ipam.get_network(cidr)
+            except KeyError:
+                raise HTTPException(404, "CIDR not found")
+            response = templates.TemplateResponse(
+                request,
+                "partials/ipam_port_form.html",
+                context(request, network=network, host_ip=host_ip, port=None, net_index=net_index, error=str(exc)),
+                status_code=422,
+            )
+            return response
+        return _render_full_accordion_body(request, cidr, net_index)
+
+    @app.delete("/ipam/networks/{cidr:path}/hosts/{host_ip}/ports/{port:int}", response_class=HTMLResponse)
+    async def ipam_delete_port(request: Request, cidr: str, host_ip: str, port: int, net_index: int = 0):
+        try:
+            ipam.delete_port(cidr, host_ip, port)
+        except KeyError:
+            raise HTTPException(404, "Port not found")
+        return _render_full_accordion_body(request, cidr, net_index)
+
+    @app.put("/ipam/networks/{cidr:path}", response_class=HTMLResponse)
+    async def ipam_update_network(request: Request, cidr: str, new_cidr: str = Form(..., alias="cidr")):
+        try:
+            network = IpamNetwork(cidr=new_cidr.strip())
+            ipam.update_network(cidr, network)
+        except KeyError:
+            raise HTTPException(404, "CIDR not found")
+        except (ValidationError, ValueError) as exc:
+            response = templates.TemplateResponse(
+                request,
+                "partials/ipam_network_form.html",
+                context(request, network=None, error=str(exc)),
+                status_code=422,
+            )
+            response.headers["HX-Retarget"] = "#ipam-network-form-slot"
+            return response
+        return _render_network_list(request)
+
+    @app.delete("/ipam/networks/{cidr:path}", response_class=HTMLResponse)
+    async def ipam_delete_network(cidr: str):
+        try:
+            ipam.delete_network(cidr)
+        except KeyError:
+            raise HTTPException(404, "CIDR not found")
+        return HTMLResponse("")
+
+    def _render_full_accordion_body(request: Request, cidr: str, net_index: int = 0) -> HTMLResponse:
+        try:
+            network = ipam.get_network(cidr)
+        except KeyError:
+            raise HTTPException(404, "CIDR not found")
+        return templates.TemplateResponse(
+            request,
+            "partials/ipam_network_body.html",
+            context(request, network=network, net_index=net_index),
+        )
+
+    @app.get("/ipam/browse", response_class=HTMLResponse)
+    async def ipam_browse_modal(request: Request):
+        networks = ipam.list_networks()
+        return templates.TemplateResponse(
+            request, "partials/ipam_browse_modal.html", context(request, networks=networks)
+        )
 
     return app
 

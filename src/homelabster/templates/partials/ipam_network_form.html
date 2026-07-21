@@ -1,0 +1,17 @@
+<div class="card"><div class="card-body">
+<h3 class="h6">{% if network %}Edit CIDR{% else %}Add CIDR{% endif %}</h3>
+{% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+<form hx-{% if network %}put{% else %}post{% endif %}="{% if network %}/ipam/networks/{{ network.cidr | urlencode }}{% else %}/ipam/networks{% endif %}"
+      hx-target="#ipam-network-list" hx-swap="innerHTML">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-6">
+      <label class="form-label">CIDR range</label>
+      <input class="form-control" name="cidr" required placeholder="192.168.1.0/24" value="{{ network.cidr if network else '' }}">
+    </div>
+    <div class="col-md-6">
+      <button class="btn btn-primary">Save</button>
+      <button type="button" class="btn btn-link" hx-get="/ipam/networks/cancel" hx-target="#ipam-network-form-slot" hx-swap="innerHTML">Cancel</button>
+    </div>
+  </div>
+</form>
+</div></div>

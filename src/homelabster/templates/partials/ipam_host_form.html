@@ -1,0 +1,22 @@
+<div class="card mt-2 mb-2"><div class="card-body">
+<h3 class="h6">{% if host %}Edit host{% else %}Add host{% endif %}</h3>
+{% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+<form hx-{% if host %}put{% else %}post{% endif %}="{% if host %}/ipam/networks/{{ network.cidr | urlencode }}/hosts/{{ host.ip | urlencode }}{% else %}/ipam/networks/{{ network.cidr | urlencode }}/hosts{% endif %}"
+      hx-target="#net-{{ net_index }} .accordion-body" hx-swap="innerHTML">
+  <input type="hidden" name="net_index" value="{{ net_index }}">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-5">
+      <label class="form-label">Hostname</label>
+      <input class="form-control" name="hostname" required value="{{ host.hostname if host else '' }}">
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">IP address</label>
+      <input class="form-control" name="ip" required placeholder="192.168.1.5" value="{{ host.ip if host else '' }}">
+    </div>
+    <div class="col-md-3">
+      <button class="btn btn-primary">Save</button>
+      <button type="button" class="btn btn-link" onclick="this.closest('.card').remove()">Cancel</button>
+    </div>
+  </div>
+</form>
+</div></div>

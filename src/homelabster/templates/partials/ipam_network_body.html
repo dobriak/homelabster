@@ -1,0 +1,7 @@
+<div class="d-flex justify-content-end gap-1 mb-2">
+  <button class="btn btn-sm btn-outline-secondary" hx-get="/ipam/networks/{{ network.cidr | urlencode }}/edit" hx-target="#ipam-network-form-slot" hx-swap="innerHTML">Edit CIDR</button>
+  <button class="btn btn-sm btn-outline-secondary" hx-get="/ipam/networks/{{ network.cidr | urlencode }}/hosts/new?net_index={{ net_index }}" hx-target="#host-form-{{ net_index }}" hx-swap="innerHTML">Add host</button>
+  <button class="btn btn-sm btn-outline-danger" hx-delete="/ipam/networks/{{ network.cidr | urlencode }}" hx-confirm="Delete {{ network.cidr }} and all its hosts?" hx-target="#ipam-network-list" hx-swap="innerHTML" hx-select="#ipam-network-list">Delete CIDR</button>
+</div>
+<div id="host-form-{{ net_index }}"></div>
+{% include "partials/ipam_host_list.html" %}

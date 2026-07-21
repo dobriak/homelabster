@@ -1,0 +1,46 @@
+<div class="modal fade" id="ipam-browse-modal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Browse IPAM</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        {% if networks %}
+        {% for network in networks %}
+        <h6 class="mt-3"><code>{{ network.cidr }}</code></h6>
+        {% if network.hosts %}
+        <div class="table-responsive"><table class="table table-sm">
+        <thead><tr><th>Hostname</th><th>IP</th><th>Port</th><th></th></tr></thead>
+        <tbody>
+        {% for host in network.hosts %}
+        {% if host.ports %}
+        {% for p in host.ports %}
+        <tr>
+          <td>{{ host.hostname }}</td>
+          <td><code>{{ host.ip }}</code></td>
+          <td><span class="badge bg-light text-dark">{{ p.name }}:{{ p.port }}</span></td>
+          <td><button class="btn btn-sm btn-primary ipam-select-btn" data-ip="{{ host.ip }}" data-port="{{ p.port }}">Select</button></td>
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr>
+          <td>{{ host.hostname }}</td>
+          <td><code>{{ host.ip }}</code></td>
+          <td><span class="text-body-secondary">no ports</span></td>
+          <td><button class="btn btn-sm btn-outline-secondary ipam-select-btn" data-ip="{{ host.ip }}" data-port="">Select IP only</button></td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+        </tbody></table></div>
+        {% else %}
+        <p class="text-body-secondary ms-3">No hosts configured.</p>
+        {% endif %}
+        {% endfor %}
+        {% else %}
+        <p class="text-body-secondary">No IPAM data configured. <a href="/ipam">Configure IPAM</a> first.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from ipaddress import AddressValueError, IPv4Address, IPv4Network
 from typing import Literal
 from urllib.parse import urlparse
 
@@ -123,3 +124,62 @@ class CategoriesDocument(BaseModel):
 def service_id_from_name(name: str) -> str:
     value = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
     return value
+
+
+class IpamPort(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    port: int = Field(ge=1, le=65535)
+
+
+class IpamHost(BaseModel):
+    hostname: str = Field(min_length=1, max_length=100)
+    ip: str
+    ports: list[IpamPort] = Field(default_factory=list)
+
+    @field_validator("ip")
+    @classmethod
+    def valid_ipv4(cls, value: str) -> str:
+        try:
+            IPv4Address(value)
+        except AddressValueError:
+            raise ValueError("must be a valid IPv4 address")
+        return value
+
+
+class IpamNetwork(BaseModel):
+    cidr: str
+    hosts: list[IpamHost] = Field(default_factory=list)
+
+    @field_validator("cidr")
+    @classmethod
+    def valid_cidr(cls, value: str) -> str:
+        try:
+            IPv4Network(value, strict=False)
+        except (AddressValueError, ValueError):
+            raise ValueError("must be a valid CIDR notation, e.g. 192.168.1.0/24")
+        return value
+
+    @field_validator("hosts")
+    @classmethod
+    def hosts_in_cidr_and_unique(cls, hosts: list[IpamHost], info) -> list[IpamHost]:
+        cidr = info.data.get("cidr")
+        if cidr:
+            try:
+                network = IPv4Network(cidr, strict=False)
+            except (AddressValueError, ValueError):
+                return hosts
+            for host in hosts:
+                try:
+                    if IPv4Address(host.ip) not in network:
+                        raise ValueError(f"IP {host.ip} is not within CIDR {cidr}")
+                except AddressValueError:
+                    continue
+        ips = [host.ip for host in hosts]
+        if len(ips) != len(set(ips)):
+            raise ValueError("host IPs must be unique within a network")
+        return hosts
+
+
+class IpamDocument(BaseModel):
+    version: int = 1
+    networks: list[IpamNetwork] = Field(default_factory=list)

@@ -1,0 +1,27 @@
+{% if network.hosts %}
+<div class="table-responsive"><table class="table table-sm align-middle">
+<thead><tr><th>Hostname</th><th>IP</th><th>Ports</th><th></th></tr></thead>
+<tbody>
+{% for host in network.hosts %}
+<tr>
+  <td>{{ host.hostname }}</td>
+  <td><code>{{ host.ip }}</code></td>
+  <td>
+    {% if host.ports %}
+      {% for p in host.ports %}<span class="badge bg-light text-dark me-1">{{ p.name }}:{{ p.port }}</span>{% endfor %}
+    {% else %}
+      <span class="text-body-secondary">—</span>
+    {% endif %}
+    <button class="btn btn-sm btn-outline-secondary ms-1" hx-get="/ipam/networks/{{ network.cidr | urlencode }}/hosts/{{ host.ip | urlencode }}/ports/new?net_index={{ net_index }}" hx-target="#port-form-{{ net_index }}-{{ loop.index }}" hx-swap="innerHTML">+</button>
+    <div id="port-form-{{ net_index }}-{{ loop.index }}" class="mt-1"></div>
+  </td>
+  <td class="text-end">
+    <button class="btn btn-sm btn-outline-secondary" hx-get="/ipam/networks/{{ network.cidr | urlencode }}/hosts/{{ host.ip | urlencode }}/edit?net_index={{ net_index }}" hx-target="#host-form-{{ net_index }}" hx-swap="innerHTML">Edit</button>
+    <button class="btn btn-sm btn-outline-danger" hx-delete="/ipam/networks/{{ network.cidr | urlencode }}/hosts/{{ host.ip | urlencode }}?net_index={{ net_index }}" hx-confirm="Delete host {{ host.hostname }}?" hx-target="#net-{{ net_index }} .accordion-body" hx-swap="innerHTML">Delete</button>
+  </td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+{% else %}
+<p class="text-body-secondary">No hosts in this network.</p>
+{% endif %}

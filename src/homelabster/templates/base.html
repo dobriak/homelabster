@@ -23,13 +23,14 @@
         <div class="collapse navbar-collapse" id="main-navigation">
           <div class="navbar-actions d-flex align-items-center gap-3 ms-auto{% if request.url.path == '/' %} navbar-actions-with-search{% endif %}">
             {% if request.url.path == '/' %}<div class="service-search"><label class="visually-hidden" for="service-search">Search services</label><input id="service-search" class="form-control form-control-sm" type="search" name="search" placeholder="Search services" autocomplete="off" hx-get="/partials/services" hx-trigger="input changed delay:200ms" hx-target="#service-grid" hx-swap="innerHTML"></div>{% endif %}
-            <div class="navbar-nav"><a class="nav-link" href="/admin">Settings</a><a class="nav-link" href="/services">Services</a></div>
+            <div class="navbar-nav"><a class="nav-link" href="/admin">Settings</a><a class="nav-link" href="/ipam">IPAM</a><a class="nav-link" href="/services">Services</a></div>
           </div>
         </div>
       </div>
     </nav>
     <main class="container pb-5">{% block content %}{% endblock %}</main>
     <div class="toast-container position-fixed top-0 end-0 p-3"><div id="service-save-toast" class="toast align-items-center border-0" role="status" aria-live="polite" aria-atomic="true"><div class="d-flex"><div class="toast-body"></div><button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div></div>
+    <div id="ipam-modal-container"></div>
     <script src="{{ url_for('static', path='htmx-2.0.10.min.js') }}"></script>
     <script src="{{ url_for('static', path='bootstrap-5.3.8.bundle.min.js') }}"></script>
     <script>
@@ -43,6 +44,27 @@
           const slot = document.getElementById('service-form-slot');
           slot.innerHTML = '<button class="btn btn-primary" hx-get="/services/new" hx-target="#service-form-slot" hx-swap="innerHTML">Add service</button>';
           htmx.process(slot);
+        }
+      });
+      document.body.addEventListener('ipam-selected', (event) => {
+        const {ip, port} = event.detail;
+        const url = port ? `http://${ip}:${port}` : `http://${ip}`;
+        const targetInput = document.getElementById('ipam-modal-container')._targetInput;
+        if (targetInput) {
+          targetInput.value = url;
+        }
+        bootstrap.Modal.getInstance(document.getElementById('ipam-browse-modal')).hide();
+      });
+      document.body.addEventListener('click', (event) => {
+        const btn = event.target.closest('.ipam-select-btn');
+        if (btn) {
+          const ip = btn.dataset.ip;
+          const port = btn.dataset.port;
+          document.body.dispatchEvent(new CustomEvent('ipam-selected', {detail: {ip, port}}));
+        }
+        const browseBtn = event.target.closest('.ipam-browse-btn');
+        if (browseBtn) {
+          document.getElementById('ipam-modal-container')._targetInput = browseBtn.parentElement.querySelector('.ipam-target-url');
         }
       });
     </script>

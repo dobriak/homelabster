@@ -1,0 +1,21 @@
+version: 1
+networks:
+  - cidr: 192.168.1.0/24
+    hosts:
+      - hostname: proxmox
+        ip: 192.168.1.10
+        ports:
+          - name: web
+            port: 8006
+      - hostname: pihole
+        ip: 192.168.1.20
+        ports:
+          - name: admin
+            port: 80
+  - cidr: 10.0.0.0/24
+    hosts:
+      - hostname: k8s-master
+        ip: 10.0.0.10
+        ports:
+          - name: api
+            port: 6443

@@ -12,7 +12,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY src ./src
 RUN uv sync --frozen --no-dev
 
-COPY config/services.yaml.example config/categories.yaml.example /defaults/
+COPY config/services.yaml.example config/categories.yaml.example config/ipam.yaml.example /defaults/
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint
 RUN chmod +x /usr/local/bin/docker-entrypoint
 
