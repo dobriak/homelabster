@@ -1,0 +1,20 @@
+<div class="card mt-1 mb-1"><div class="card-body py-2">
+{% if error %}<div class="alert alert-danger py-1 small">{{ error }}</div>{% endif %}
+<form class="row g-1 align-items-end"
+      hx-{% if port %}put{% else %}post{% endif %}="{% if port %}/ipam/networks/{{ network.cidr | urlencode }}/hosts/{{ host_ip | urlencode }}/ports/{{ port.port }}{% else %}/ipam/networks/{{ network.cidr | urlencode }}/hosts/{{ host_ip | urlencode }}/ports{% endif %}"
+      hx-target="#net-{{ net_index }} .accordion-body" hx-swap="innerHTML">
+  <input type="hidden" name="net_index" value="{{ net_index }}">
+  <div class="col-5">
+    <label class="form-label small">Port name</label>
+    <input class="form-control form-control-sm" name="name" required value="{{ port.name if port else '' }}">
+  </div>
+  <div class="col-4">
+    <label class="form-label small">Port number</label>
+    <input class="form-control form-control-sm" name="port" type="number" min="1" max="65535" required value="{{ port.port if port else '' }}">
+  </div>
+  <div class="col-3">
+    <button class="btn btn-primary btn-sm">Save</button>
+    <button type="button" class="btn btn-link btn-sm" onclick="this.closest('.card').remove()">Cancel</button>
+  </div>
+</form>
+</div></div>

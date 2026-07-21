@@ -1,0 +1,21 @@
+{% if networks %}
+<div class="accordion" id="ipam-accordion">
+{% for network in networks %}
+<div class="accordion-item">
+  <h2 class="accordion-header">
+    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#net-{{ loop.index }}">
+      <code>{{ network.cidr }}</code>
+      <span class="badge bg-secondary ms-2">{{ network.hosts | length }} host{% if network.hosts | length != 1 %}s{% endif %}</span>
+    </button>
+  </h2>
+  <div id="net-{{ loop.index }}" class="accordion-collapse collapse" data-bs-parent="#ipam-accordion">
+    <div class="accordion-body">
+      {% with net_index=loop.index %}{% include "partials/ipam_network_body.html" %}{% endwith %}
+    </div>
+  </div>
+</div>
+{% endfor %}
+</div>
+{% else %}
+<p class="text-body-secondary">No CIDR ranges configured.</p>
+{% endif %}
