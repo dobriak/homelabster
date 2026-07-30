@@ -22,7 +22,7 @@
         </button>
         <div class="collapse navbar-collapse" id="main-navigation">
           <div class="navbar-actions d-flex align-items-center gap-3 ms-auto{% if request.url.path == '/' %} navbar-actions-with-search{% endif %}">
-            {% if request.url.path == '/' %}<div class="service-search"><label class="visually-hidden" for="service-search">Search services</label><input id="service-search" class="form-control form-control-sm" type="search" name="search" placeholder="Search services" autocomplete="off" hx-get="/partials/services" hx-trigger="input changed delay:200ms" hx-target="#service-grid" hx-swap="innerHTML"></div>{% endif %}
+            {% if request.url.path == '/' %}<div class="link-mode-toggle btn-group btn-group-sm" role="group" aria-label="Service link destination"><button type="button" class="btn btn-outline-secondary" data-service-link-mode="fqdn" aria-pressed="true">FQDN</button><button type="button" class="btn btn-outline-secondary" data-service-link-mode="ip" aria-pressed="false">IP</button></div><div class="service-search"><label class="visually-hidden" for="service-search">Search services</label><input id="service-search" class="form-control form-control-sm" type="search" name="search" placeholder="Search services" autocomplete="off" hx-get="/partials/services" hx-trigger="input changed delay:200ms" hx-target="#service-grid" hx-swap="innerHTML"></div>{% endif %}
             <div class="navbar-nav"><a class="nav-link" href="/admin">Settings</a><a class="nav-link" href="/ipam">IPAM</a><a class="nav-link" href="/services">Services</a></div>
           </div>
         </div>
@@ -34,6 +34,49 @@
     <script src="{{ url_for('static', path='htmx-2.0.10.min.js') }}"></script>
     <script src="{{ url_for('static', path='bootstrap-5.3.8.bundle.min.js') }}"></script>
     <script>
+      const serviceLinkModeStorageKey = 'homelabster.service-link-mode';
+
+      const getServiceLinkMode = () => {
+        try {
+          const mode = window.localStorage.getItem(serviceLinkModeStorageKey);
+          return mode === 'ip' ? 'ip' : 'fqdn';
+        } catch {
+          return 'fqdn';
+        }
+      };
+
+      let currentServiceLinkMode = getServiceLinkMode();
+
+      const applyServiceLinkMode = (mode) => {
+        document.querySelectorAll('[data-service-link]').forEach((link) => {
+          link.href = mode === 'ip' ? link.dataset.ipUrl : link.dataset.fqdnUrl;
+        });
+        document.querySelectorAll('[data-service-link-mode]').forEach((button) => {
+          const selected = button.dataset.serviceLinkMode === mode;
+          button.classList.toggle('active', selected);
+          button.setAttribute('aria-pressed', String(selected));
+        });
+      };
+
+      const setServiceLinkMode = (mode) => {
+        currentServiceLinkMode = mode;
+        try {
+          window.localStorage.setItem(serviceLinkModeStorageKey, mode);
+        } catch {
+          // Keep the selection for the current page when browser storage is unavailable.
+        }
+        applyServiceLinkMode(mode);
+      };
+
+      document.body.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-service-link-mode]');
+        if (button) {
+          setServiceLinkMode(button.dataset.serviceLinkMode);
+        }
+      });
+      document.body.addEventListener('htmx:afterSwap', () => applyServiceLinkMode(currentServiceLinkMode));
+      applyServiceLinkMode(currentServiceLinkMode);
+
       document.body.addEventListener('service-save-status', (event) => {
         const { message, variant, clear_form: clearForm } = event.detail;
         const toast = document.getElementById('service-save-toast');

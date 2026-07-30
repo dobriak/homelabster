@@ -20,5 +20,11 @@ def test_navigation_uses_application_icon_and_favicon(tmp_path: Path):
         assert 'class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-navigation"' in response.text
         assert 'class="collapse navbar-collapse" id="main-navigation"' in response.text
         assert 'navbar-actions d-flex align-items-center gap-3 ms-auto navbar-actions-with-search' in response.text
+        assert 'class="link-mode-toggle btn-group btn-group-sm" role="group" aria-label="Service link destination"' in response.text
+        assert 'class="btn btn-outline-secondary" data-service-link-mode="fqdn" aria-pressed="true">FQDN</button>' in response.text
+        assert 'class="btn btn-outline-secondary" data-service-link-mode="ip" aria-pressed="false">IP</button>' in response.text
+        assert 'homelabster.service-link-mode' in response.text
+        assert 'htmx:afterSwap' in response.text
+        assert 'link-mode-toggle' not in test_client.get("/admin").text
         assert test_client.get("/static/favicon.ico").status_code == 200
         assert test_client.get("/static/homelabster-icon.svg").status_code == 200

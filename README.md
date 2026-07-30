@@ -8,7 +8,7 @@ A local-first FastAPI dashboard for YAML-defined homelab services. It groups ser
 - Create, edit, and delete IPAM entries (CIDR ranges, hosts with IP addresses, and named ports) on the dedicated **IPAM** page. You can manage multiple unrelated CIDRs.
 - When creating or editing a service, click **Browse** next to the fallback or health URL fields to pick an `IP:port` pair from your IPAM data instead of typing it manually.
 - Configure category names, Font Awesome icons, and dashboard order. The fixed **All** category contains unassigned services.
-- Open each service through its FQDN or compact `ip` fallback link.
+- Switch all dashboard service links between FQDN and IP fallback URLs with the frontend-only navbar toggle. This keeps IP fallback links available when local DNS is unavailable or Homelabster becomes unreachable after the dashboard has loaded.
 - Optionally poll a health URL and display the current health state.
 - Preview a matching Dashboard Icons catalog icon while editing a service, or upload an SVG, PNG, or WEBP icon to override it.
 
@@ -44,7 +44,7 @@ on the host. Stop it with `docker compose down`.
 - Use **Settings** to set the dashboard title, UI theme, health-check interval, categories, and category order.
 - Use **Services** to create, edit, delete, and categorize homelab services. A service can be left unassigned to appear in **All**.
 - When creating or editing a service, the icon preview uses the service name by default. Enter an optional **Icon lookup name**—for example, `Proxmox` for a tile named `Arbitrary String`—to use that catalog match instead. Uploading a custom icon always takes precedence.
-- Click a service name to open its FQDN; use its `ip` button for the IP:port fallback.
+- Use the dashboard navbar’s **FQDN | IP** toggle to choose whether service names open their FQDN or IP:port fallback URLs. Choose **IP** when local DNS is unavailable, or when you need to reach services after an already-loaded dashboard can no longer contact Homelabster. Switching links happens entirely in the browser and does not make a request to Homelabster; your choice is remembered in the browser.
 
 ## Runtime data and backups
 

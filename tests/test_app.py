@@ -155,7 +155,7 @@ def test_services_crud_flow(tmp_path: Path):
         assert "services: []" in (tmp_path / "services.yaml").read_text()
 
 
-def test_service_tile_uses_title_and_compact_ip_link(tmp_path: Path):
+def test_service_tile_uses_title_link_with_client_side_fqdn_and_ip_urls(tmp_path: Path):
     with client(tmp_path) as test_client:
         test_client.post(
             "/services",
@@ -163,9 +163,10 @@ def test_service_tile_uses_title_and_compact_ip_link(tmp_path: Path):
         )
         tile = test_client.get("/partials/services")
         assert 'href="https://grafana.local"' in tile.text
-        assert '>Grafana</a></h2><a class="btn btn-sm btn-outline-secondary"' in tile.text
-        assert '>ip</a>' in tile.text
-        assert "Use IP:port fallback" not in tile.text
+        assert 'data-service-link data-fqdn-url="https://grafana.local" data-ip-url="http://10.0.0.8:3000"' in tile.text
+        assert '>Grafana</a></h2>' in tile.text
+        assert '>ip</a>' not in tile.text
+        assert "using its IP address" not in tile.text
         assert ">Open Grafana</a>" not in tile.text
         assert "btn btn-primary" not in tile.text
         assert "Not checked yet" not in tile.text
