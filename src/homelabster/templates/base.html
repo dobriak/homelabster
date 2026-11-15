@@ -4,20 +4,20 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}{{ settings.dashboard_title }}{% endblock %}</title>
-    <link rel="icon" href="{{ url_for('static', path='favicon.ico') }}" sizes="any">
+    <link rel="icon" href="{{ url_for('static', path='favicon.ico').path }}" sizes="any">
     {% if settings.theme == 'system' %}<script>const themeMedia = window.matchMedia('(prefers-color-scheme: dark)'); const setTheme = () => document.documentElement.dataset.bsTheme = themeMedia.matches ? 'dark' : 'light'; setTheme(); themeMedia.addEventListener('change', setTheme);</script>{% endif %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
-    <link rel="stylesheet" href="{{ url_for('static', path='bootstrap-5.3.8.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='bootstrap-5.3.8.min.css').path }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', path='app.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='app.css').path }}">
   </head>
   <body class="bg-body-tertiary">
     <nav class="navbar navbar-expand-md bg-dark navbar-dark mb-4">
       <div class="container">
         <a class="navbar-brand d-inline-flex align-items-center gap-2" href="/">
-          <img class="navbar-logo" src="{{ url_for('static', path='homelabster-icon.svg') }}" alt="">
+          <img class="navbar-logo" src="{{ url_for('static', path='homelabster-icon.svg').path }}" alt="">
           <span>{{ settings.dashboard_title }}</span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-navigation" aria-controls="main-navigation" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,8 +34,8 @@
     <main class="container pb-5">{% block content %}{% endblock %}</main>
     <div class="toast-container position-fixed top-0 end-0 p-3"><div id="service-save-toast" class="toast align-items-center border-0" role="status" aria-live="polite" aria-atomic="true"><div class="d-flex"><div class="toast-body"></div><button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div></div>
     <div id="ipam-modal-container"></div>
-    <script src="{{ url_for('static', path='htmx-2.0.10.min.js') }}"></script>
-    <script src="{{ url_for('static', path='bootstrap-5.3.8.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', path='htmx-2.0.10.min.js').path }}"></script>
+    <script src="{{ url_for('static', path='bootstrap-5.3.8.bundle.min.js').path }}"></script>
     <script>
       const serviceLinkModeStorageKey = 'homelabster.service-link-mode';
 
